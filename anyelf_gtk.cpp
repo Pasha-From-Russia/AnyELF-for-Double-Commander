@@ -23,7 +23,7 @@ THE SOFTWARE.
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
 #include "anyelf_gtk.h"
-#include "fcntl.h"
+#include <fcntl.h>
 #include <stdarg.h>
 
 std::string g_text;

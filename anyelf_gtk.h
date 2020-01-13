@@ -36,14 +36,6 @@
 #define LISTPLUGIN_OK      0
 #define LISTPLUGIN_ERROR   1
 
-typedef struct {
-	int size;
-	DWORD PluginInterfaceVersionLow;
-	DWORD PluginInterfaceVersionHi;
-	char DefaultIniName[MAX_PATH];
-} ListDefaultParamStruct;
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif
