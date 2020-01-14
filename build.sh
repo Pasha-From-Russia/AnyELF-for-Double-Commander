@@ -30,6 +30,17 @@ if [ ! -d ../ELFIO ]; then
 	cd $here
 fi
 
+PACKET=libgtk2.0-dev
+
+HAS_GTK_HEADERS=$(apt list --installed 2>/dev/null | grep -c $PACKET)
+
+if [[ "$HAS_GTK_HEADERS" == "0" || "$HAS_GTK_HEADERS" == "" ]]; then
+	echo_yellow "$PACKET is not istalled\nrun the following command to install it:"
+	echo -e "sudo apt install $PACKET\n\n"
+	exit 1
+fi
+
+
 DIRECTIVE=""
 elfio=$(awk '/PACKAGE_VERSION=/ {split($0, a, "="); printf "%s", a[2]}' ../ELFIO/configure 2>/dev/null | sed s/"'"//g)
 [ "$elfio" != "" ] && DIRECTIVE="DIRECTIVE=-DELFIO_VERSION=\"$elfio\""
