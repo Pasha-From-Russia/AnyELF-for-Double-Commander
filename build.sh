@@ -22,11 +22,16 @@ echo_green()
 	echo -e $CGREEN"$1"$CRESET
 }
 
-if [ ! -d ../ELFIO ]; then
-	here=$(pwd)
+here=$(pwd)
+ELFIO_DIR=../ELFIO
+if [ ! -d $ELFIO_DIR ]; then
 	cd ..
 	echo_yellow "Cloning ELFIO..."
 	git clone https://github.com/serge1/ELFIO.git || echo_red "Can't clone ELFIO"
+	cd $here
+else
+	cd $ELFIO_DIR
+	git pull
 	cd $here
 fi
 
