@@ -23,6 +23,7 @@ THE SOFTWARE.
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
 #include "anyelf_gtk.h"
+#include <elfio/elfio_version.hpp>
 #include <fcntl.h>
 #include <stdarg.h>
 
@@ -35,17 +36,6 @@ int g_previousCursorPos = 0;
 
 static const gchar *g_fontname = "monospace 12";
 
-#ifndef ELFIO_VERSION
-
-	#define ELFIO "(unknown version)"
-
-#else
-
-	#define VER1_(x) #x
-	#define VER_(x) VER1_(x)
-	#define ELFIO VER_(ELFIO_VERSION)
-
-#endif
 //---------------------------------------------------------------------------
 gint showDialog(
 		HWND t_parent,
@@ -463,7 +453,7 @@ HWND DCPCALL ListLoad(
 	snprintf(info, sizeof(info),
 			 "\n\nELFIO %s by Serge Lamikhov-Center\n"
 			 "AnyELF-GTK plugin v%d.%d for DoubleCommander by Pasha-From-Russia",
-			ELFIO,
+			ELFIO_VERSION,
 			ANYELF_VERSION_HI,
 			ANYELF_VERSION_LOW);
 

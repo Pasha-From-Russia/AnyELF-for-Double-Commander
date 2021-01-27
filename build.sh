@@ -7,19 +7,19 @@ CGREEN="\e[92m"
 
 echo_yellow()
 {
-	echo -e $CYELLOW"$1"$CRESET
+	echo -e $CYELLOW"\n$1"$CRESET
 }
 
 echo_red()
 {
 	set -e
-	echo -e $CRED"$1"$CRESET
+	echo -e $CRED"\n$1"$CRESET
 	exit 1
 }
 
 echo_green()
 {
-	echo -e $CGREEN"$1"$CRESET
+	echo -e $CGREEN"\n$1"$CRESET
 }
 
 here=$(pwd)
@@ -45,20 +45,9 @@ if [[ "$HAS_GTK_HEADERS" == "0" || "$HAS_GTK_HEADERS" == "" ]]; then
 	exit 1
 fi
 
-
-DIRECTIVE=""
-elfio=$(awk '/PACKAGE_VERSION=/ {split($0, a, "="); printf "%s", a[2]}' ../ELFIO/configure 2>/dev/null | sed s/"'"//g)
-[ "$elfio" != "" ] && DIRECTIVE="DIRECTIVE=-DELFIO_VERSION=\"$elfio\""
-
 TARGETNAME=anyelf_gtk.wlx
 make clean
-if [ "$DIRECTIVE" != "" ]; then
-	make -j2 "$DIRECTIVE"
-else
-	make -j2
-fi
-[ $? -ne 0 ] && echo_red "Can't build $TARGETNAME"
-make strip
-[ $? -ne 0 ] && echo_red "Can't strip $TARGETNAME"
+make -j2 || echo_red "Can't build $TARGETNAME"
+make strip || echo_red "Can't strip $TARGETNAME"
 
 echo_green "$TARGETNAME assembled"
