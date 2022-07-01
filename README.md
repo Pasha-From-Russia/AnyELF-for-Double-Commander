@@ -1,7 +1,7 @@
 This is a reincarnation of a nice TotalCommander plugin (by Serge Lamikhov-Center) 
 made for DoubleCommander users.
 
-Update 1 Jun 2022: Now both GTK and Qt5!
+Update 1 Jul 2022: Now both GTK and Qt5!
 
 
 requirements:
