@@ -6,9 +6,11 @@ DISTFILES += \
     Makefile
 
 HEADERS += \
-    anyelf_gtk.h \
+    anyelf.h \
     common.h
 
 SOURCES += \
+    anyelf_common.cpp \
     anyelf_gtk.cpp \
+    anyelf_qt5.cpp \
     anyelfdump.cpp

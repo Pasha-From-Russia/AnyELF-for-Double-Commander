@@ -1,9 +1,6 @@
 #ifndef _ANYELF__H
 #define _ANYELF__H
 
-#define ANYELF_VERSION_HI  1
-#define ANYELF_VERSION_LOW 0
-
 #include "common.h"
 #include <string>
 
@@ -50,6 +47,7 @@ int DCPCALL ListSendCommand(HWND ListWin,int Command,int Parameter);
 }
 #endif
 
-std::string elfdump( std::string fileToLoad );
+std::string elfdump(std::string fileToLoad);
+bool isElfFile(const char *fileToLoad);
 
 #endif // _ANYELF__H

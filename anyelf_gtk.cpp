@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2020 by Pasha-From-Russia
+Copyright (C) 2020-2022 by Pasha-From-Russia
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,12 +20,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include "anyelf.h"
+#include <elfio/elfio_version.hpp>
+#include <stdarg.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
-#include "anyelf_gtk.h"
-#include <elfio/elfio_version.hpp>
-#include <fcntl.h>
-#include <stdarg.h>
 
 std::string g_text;
 GtkWidget *g_view;
@@ -34,14 +33,15 @@ std::string g_searchText;
 bool g_newSearch;
 int g_previousCursorPos = 0;
 
-static const gchar *g_fontname = "monospace 12";
+static const gchar *g_fontname     = "monospace 12";
+static const gchar *ANYELF_VERSION = "1.0";
 
 //---------------------------------------------------------------------------
 gint showDialog(
-        HWND t_parent,
-        GtkMessageType t_msgType,
-        GtkButtonsType t_buttons,
-        const char* t_printmask,
+        HWND            t_parent,
+        GtkMessageType  t_msgType,
+        GtkButtonsType  t_buttons,
+        const char     *t_printmask,
         ...
         )
 {
@@ -65,8 +65,8 @@ gint showDialog(
 
 //---------------------------------------------------------------------------
 gboolean key_press(
-        GtkWidget *t_window,
-        GdkEventKey* t_event,
+        GtkWidget     *t_window,
+        GdkEventKey   *t_event,
         GtkTextBuffer *t_buffer)
 {
     if (t_event->type != GDK_KEY_PRESS) {
@@ -137,13 +137,14 @@ enum SEARCH_DIRECTION {
     SR_BACKWARD
 };
 
+//---------------------------------------------------------------------------
 gboolean my_gtk_text_iter_search(
-                            GtkTextIter *t_iter,
-                            const gchar *t_searchText,
-                            bool t_caseSensitive,
-                            GtkTextIter *t_mstart,
-                            GtkTextIter *t_mend,
-                            SEARCH_DIRECTION t_direction)
+        GtkTextIter      *t_iter,
+        const gchar      *t_searchText,
+        bool              t_caseSensitive,
+        GtkTextIter      *t_mstart,
+        GtkTextIter      *t_mend,
+        SEARCH_DIRECTION  t_direction)
 {
     if (t_direction != SR_FORWARD && t_direction != SR_BACKWARD) {
         t_direction = SR_FORWARD;
@@ -259,9 +260,9 @@ gboolean my_gtk_text_iter_search(
 
 //---------------------------------------------------------------------------
 int find(
-        const char* t_searchString,
-        int t_searchParameter,
-        bool t_fromEnd = false)
+        const char *t_searchString,
+        int         t_searchParameter,
+        bool        t_fromEnd = false)
 {
     GtkTextIter iter;
     GtkTextIter mstart, mend;
@@ -320,38 +321,39 @@ int find(
         }
     }
 
-    if (shouldSelect) {
-        gtk_text_buffer_place_cursor(
-                    buffer,
-                    &mstart);
-        gtk_text_buffer_select_range(buffer, &mstart, &mend);
-        GtkTextMark* mark = gtk_text_buffer_create_mark(
-                    buffer,
-                    "last_pos",
-                    &mend,
-                    FALSE);
-        gtk_text_view_scroll_to_mark(
-                    GTK_TEXT_VIEW(g_view),
-                    mark,
-                    0.0,
-                    true,
-                    0.0,
-                    0.17);
-
-        prev_mstart = mstart;
-        prev_mend = mend;
-        g_newSearch = false;
-        g_previousCursorPos = gtk_text_iter_get_offset(&mstart);
+    if (!shouldSelect) {
+        return ret;
     }
+    gtk_text_buffer_place_cursor(
+                buffer,
+                &mstart);
+    gtk_text_buffer_select_range(buffer, &mstart, &mend);
+    GtkTextMark* mark = gtk_text_buffer_create_mark(
+                buffer,
+                "last_pos",
+                &mend,
+                FALSE);
+    gtk_text_view_scroll_to_mark(
+                GTK_TEXT_VIEW(g_view),
+                mark,
+                0.0,
+                true,
+                0.0,
+                0.17);
+
+    prev_mstart = mstart;
+    prev_mend = mend;
+    g_newSearch = false;
+    g_previousCursorPos = gtk_text_iter_get_offset(&mstart);
     return ret;
 }
 
 /* API */
 //---------------------------------------------------------------------------
 int DCPCALL ListSearchText(
-                HWND t_listWin,
-                char* t_searchString,
-                int t_searchParameter)
+        HWND  t_listWin,
+        char *t_searchString,
+        int   t_searchParameter)
 {
     if (!g_view || !t_searchString) {
         return LISTPLUGIN_ERROR;
@@ -389,33 +391,32 @@ int DCPCALL ListSearchText(
 
     if (find(t_searchString, t_searchParameter) == SEARCH_OK) {
         return LISTPLUGIN_OK;
-    } else {
-        if (firstRun) {
-            showDialog(
-                t_listWin,
-                GTK_MESSAGE_INFO,
-                GTK_BUTTONS_OK,
-                "\"%s\" not found!",
-                t_searchString
-                );
-            return LISTPLUGIN_ERROR;
-        }
-        gint dlgRet = showDialog(
-                t_listWin,
-                GTK_MESSAGE_QUESTION,
-                GTK_BUTTONS_YES_NO,
-                "\"%s\" not found!\nTry to search from the %s?",
-                t_searchString,
-                backwardSearch ? "end" : "beginning"
-                );
+    }
+    if (firstRun) {
+        showDialog(
+            t_listWin,
+            GTK_MESSAGE_INFO,
+            GTK_BUTTONS_OK,
+            "\"%s\" not found!",
+            t_searchString
+            );
+        return LISTPLUGIN_ERROR;
+    }
+    gint dlgRet = showDialog(
+            t_listWin,
+            GTK_MESSAGE_QUESTION,
+            GTK_BUTTONS_YES_NO,
+            "\"%s\" not found!\nTry to search from the %s?",
+            t_searchString,
+            backwardSearch ? "end" : "beginning"
+            );
 
-        if (dlgRet == GTK_RESPONSE_YES) {
-            if (last_pos) {
-                gtk_text_buffer_delete_mark(buffer, last_pos);
-            }
-            if (find(t_searchString, t_searchParameter, backwardSearch) == SEARCH_OK) {
-                return LISTPLUGIN_OK;
-            }
+    if (dlgRet == GTK_RESPONSE_YES) {
+        if (last_pos) {
+            gtk_text_buffer_delete_mark(buffer, last_pos);
+        }
+        if (find(t_searchString, t_searchParameter, backwardSearch) == SEARCH_OK) {
+            return LISTPLUGIN_OK;
         }
     }
     return LISTPLUGIN_ERROR;
@@ -423,23 +424,14 @@ int DCPCALL ListSearchText(
 
 //---------------------------------------------------------------------------
 HWND DCPCALL ListLoad(
-                HWND t_parentWin,
-                char* t_fileToLoad,
-                int t_showFlags)
+        HWND  t_parentWin,
+        char *t_fileToLoad,
+        int   t_showFlags)
 {
     g_searchText = "";
     g_previousCursorPos = 0;
 
-    int f = open(t_fileToLoad, O_RDONLY);
-    if (f == -1) {
-        return NULL;
-    }
-    uint32_t header = 0;
-    int8_t size = sizeof(header);
-    read(f, &header, size);
-    close(f);
-    if (header != 0x464C457F) {
-        //not 0x7F E L F signature
+    if (!isElfFile(t_fileToLoad)) {
         return NULL;
     }
 
@@ -452,10 +444,9 @@ HWND DCPCALL ListLoad(
 
     snprintf(info, sizeof(info),
              "\n\nELFIO %s by Serge Lamikhov-Center\n"
-             "AnyELF-GTK plugin v%d.%d for DoubleCommander by Pasha-From-Russia",
+             "AnyELF-GTK plugin v%s for DoubleCommander by Pasha-From-Russia",
             ELFIO_VERSION,
-            ANYELF_VERSION_HI,
-            ANYELF_VERSION_LOW);
+            ANYELF_VERSION);
 
     g_text += info;
 
@@ -510,9 +501,9 @@ HWND DCPCALL ListLoad(
 
 //---------------------------------------------------------------------------
 int DCPCALL ListSendCommand(
-                HWND t_listWin,
-                int t_command,
-                int t_parameter)
+        HWND t_listWin,
+        int  t_command,
+        int  t_parameter)
 {
     GtkTextIter p;
 
@@ -533,17 +524,15 @@ int DCPCALL ListSendCommand(
         default:
             return LISTPLUGIN_ERROR;
     }
-    return LISTPLUGIN_OK;
+    return LISTPLUGIN_ERROR;
 }
 
 //---------------------------------------------------------------------------
-void DCPCALL ListGetDetectString(char* t_detectString, int t_maxlen)
+void DCPCALL ListCloseWindow(
+        HWND t_listWin)
 {
-    snprintf(t_detectString, t_maxlen, "%s", "EXT=\"*\"");
-}
-
-//---------------------------------------------------------------------------
-void DCPCALL ListCloseWindow(HWND t_listWin)
-{
+    if (!t_listWin) {
+        return;
+    }
     gtk_widget_destroy(GTK_WIDGET(t_listWin));
 }

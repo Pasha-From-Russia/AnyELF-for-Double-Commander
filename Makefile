@@ -1,33 +1,49 @@
-CC = g++
-DIRECTIVE =
+CXX = g++
+SDK = gtk
 OBJ_PATH = ./obj
 BIN_PATH = ./bin
 
-CFLAGS = -fPIC -Wall -Wno-unused-result -O2 -g3 $(DIRECTIVE)
+CXXFLAGS = -fPIC -Wall -O2 
 
-LIBS = -lstdc++ -static-libgcc
-INCLUDES += `pkg-config --cflags --libs gtk+-2.0` -I../ELFIO
+LIBS = stdc++
 
-TARGETNAME = anyelf_gtk.wlx
+OBJECTS = 
 
-objects = anyelf_gtk.o anyelfdump.o
+ifeq ($(SDK),qt5)
+LIBNAME = Qt5Widgets
+LIBS += Qt5Core
+LIBS += Qt5Widgets
+LIBS += Qt5Gui
+else
+LIBNAME = gtk+-2.0
+LIBS += gtk-x11-2.0
+LIBS += gdk-x11-2.0
+LIBS += gobject-2.0
+LIBS += glib-2.0
+LIBS += pango-1.0
+endif
+
+LDLIBS= $(foreach d, $(LIBS), -l$d)
+
+INCLUDES += `pkg-config --cflags --libs $(LIBNAME)` -I../ELFIO
+
+TARGETNAME = anyelf_$(SDK).wlx
+OBJECTS = anyelf_$(SDK).o anyelfdump.o anyelf_common.o
+
+HEADERS=$(wildcard *.h)
 
 all: $(TARGETNAME)
 
-anyelfdump.o: anyelfdump.cpp
+%.o: %.cpp $(HEADERS)
 	@mkdir -p $(OBJ_PATH)
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $(OBJ_PATH)/$@ 
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $(OBJ_PATH)/$@ 
 
-anyelf_gtk.o: anyelf_gtk.cpp anyelf_gtk.h common.h
-	@mkdir -p $(OBJ_PATH)
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $(OBJ_PATH)/$@
-
-$(TARGETNAME): $(objects)
+$(TARGETNAME): $(OBJECTS)
 	@mkdir -p $(BIN_PATH)
-	$(CC) $(LIBS) -shared -o $(BIN_PATH)/$@ $(OBJ_PATH)/*.o
+	$(CXX) -shared -Wl,--no-undefined -o $(BIN_PATH)/$@ $(OBJ_PATH)/*.o $(LDLIBS) -static-libgcc
 
 clean:
-	rm -f *.o $(OBJ_PATH)/*.o $(TARGETNAME)
+	rm -f *.o $(OBJ_PATH)/*.o $(BIN_PATH)/$(TARGETNAME)
 
 strip:
 	strip $(BIN_PATH)/$(TARGETNAME)
